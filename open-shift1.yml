@@ -1,0 +1,30 @@
+- hosts: nodes
+  remote_user: root
+  tasks:
+  - name: ensure selinux
+    selinux: policy=targeted state=enforcing
+  - name: install needed network manager libs
+    yum: name={{ item }} state=latest
+    with_items:
+      - NetworkManager-glib
+      - nm-connection-editor.x86_64
+      - libsemanage-python
+      - policycoreutils-python
+      - wget 
+      - git 
+      - net-tools 
+      - bind-utils 
+      - iptables-services 
+      - bridge-utils 
+      - bash-completion
+      - atomic-openshift-utils
+  - name: Installing Docker
+    yum: name=docker-1.10.3 state=installed
+  - name: unmount docker
+    shell: unmount /docker
+  - name: create docker volume group
+    shell: vgcreate docker-vg /dev/sdb2
+  - name: use existing specified volume group
+    shell: echo 'VG=docker-vg' >> /etc/sysconfig/docker-storage-setup
+  - name: enable Docker
+    service: name=docker state=started enabled=yes

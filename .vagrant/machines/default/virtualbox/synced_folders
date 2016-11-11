@@ -1,0 +1,1 @@
+{"rsync":{"/vagrant":{"type":"rsync","guestpath":"/vagrant","hostpath":"/home/fmatuszewski/Projects/zubi-microservices-2/Cloud","disabled":false,"owner":"vagrant","group":"vagrant"}}}

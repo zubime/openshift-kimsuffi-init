@@ -1,0 +1,71 @@
+- hosts: nodes
+  remote_user: root
+  tasks:
+  - name: ensure selinux
+    selinux: policy=targeted state=enforcing
+  - name: install needed network manager libs
+    yum: name={{ item }} state=installed
+    with_items:
+      - NetworkManager-glib
+      - libnm-qt-devel.x86_64
+      - nm-connection-editor.x86_64
+      - libsemanage-python
+      - policycoreutils-python
+
+#  - name: Make sure each host in your environment is configured to resolve hostnames from your DNS server
+#    nmcli: conn_name=eth0 dns4="ns1.onlydomains.com,ns2.onlydomains.com,ns3.onlydomains.com" state=present
+#  - yum: name=firewalld state=installed
+#  - firewalld: source=node2.sportiventure.com port=4789/udp state=enabled
+#  - firewalld: source=node1.sportiventure.com port=4789/udp state=enabled
+#  - firewalld: source=master.sportiventure.com port=4789/udp state=enabled
+#  - firewalld: source=master.sportiventure.com port=10250/tcp state=enabled
+#  - redhat_subscription: state=present username=joe_user password=somepass autosubscribe=true
+
+  - name: Install Base packages
+    yum: name={{ item }} state=installed
+    with_items:
+      - wget 
+      - git 
+      - net-tools 
+      - bind-utils 
+      - iptables-services 
+      - bridge-utils 
+      - bash-completion
+      - atomic-openshift-utils
+  
+  - name: Installing Docker
+    yum: name=docker-1.10.3 state=installed
+  - name: unmount docker
+    shell: unmount /docker
+  - name: create docker volume group
+    shell: vgcreate docker-vg /dev/sdb2
+  - name: use existing specified volume group
+    shell: echo 'VG=docker-vg' >> /etc/sysconfig/docker-storage-setup
+  - name: enable Docker
+    service: name=docker state=started enabled=yes
+
+- hosts: masters
+  remote_user: root
+  tasks:
+  - name: ensure selinux
+    selinux: policy=targeted state=enforcing
+  - name: install needed network manager libs
+    yum: name={{ item }} state=installed
+    with_items:
+      - NetworkManager-glib
+      - libnm-qt-devel.x86_64
+      - nm-connection-editor.x86_64
+      - libsemanage-python
+      - policycoreutils-python
+      - firewalld
+      - git
+
+#  - firewalld: source=node1.sportiventure.com port=8053/tcp state=enabled
+#  - firewalld: source=node1.sportiventure.com port=8053/udp state=enabled
+#  - firewalld: source=node1.sportiventure.com port=4789/udp state=enabled
+#  - firewalld: source=node1.sportiventure.com port=8443/tcp state=enabled
+#  
+#  - firewalld: source=node2.sportiventure.com port=8053/tcp state=enabled
+#  - firewalld: source=node2.sportiventure.com port=8053/udp state=enabled
+#  - firewalld: source=node2.sportiventure.com port=4789/udp state=enabled
+#  - firewalld: source=node2.sportiventure.com port=8443/tcp state=enabled

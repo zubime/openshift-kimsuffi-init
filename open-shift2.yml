@@ -1,0 +1,46 @@
+- hosts: nodes
+  remote_user: root
+  tasks:
+  - name: install python
+    yum: name=python state=installed
+  - name: ensure selinux
+    selinux: policy=targeted state=enforcing
+  - name: Installing Docker
+    yum: name=docker-1.10.3 state=installed
+  - name: Edit the /etc/sysconfig/docker file
+    shell: echo "OPTIONS='--selinux-enabled --insecure-registry 172.30.0.0/16 --log-opt max-size=1M --log-opt max-file=3'" >> /etc/sysconfig/docker
+  - name: unmount docker 4
+    mount: 
+      name: /docker
+      src: /dev/sda2
+      fstype: ext4
+      state: unmounted
+  - name: create docker volume group 1
+    lvg: vg=docker-vg pvs=/dev/sda2 force=yes
+  - name: use existing specified volume group B
+    lineinfile: dest=/etc/sysconfig/docker-storage-setup regexp=^VG= line=VG=docker-vg 
+  - name: enable Docker
+    service: name=docker state=started enabled=yes
+  - name: Run docker-storage-setup
+    shell: docker-storage-setup
+  - name: Install NetworkManager
+    yum: name=NetworkManager state=latest
+  - name: Start Network manager
+    service: name=NetworkManager state=started enabled=yes
+  - name: Make sure each host in your environment is configured to resolve hostnames from your DNS server
+    shell: nmcli con mod eth0 ipv4.dns "66.171.196.10 130.180.201.164 199.201.106.232 8.8.8.8 8.8.4.4"; systemctl restart network
+  - name: install needed network manager libs
+    yum: name={{ item }} state=latest
+    with_items:
+      - NetworkManager-glib
+      - nm-connection-editor.x86_64
+      - libsemanage-python
+      - policycoreutils-python
+      - wget 
+      - git 
+      - net-tools 
+      - bind-utils 
+      - iptables-services 
+      - bridge-utils 
+      - bash-completion
+      - atomic-openshift-utils
