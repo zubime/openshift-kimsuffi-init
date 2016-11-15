@@ -1,0 +1,2 @@
+cd /
+openshift start master --write-config=/openshift.local.config/master

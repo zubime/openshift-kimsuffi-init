@@ -9,20 +9,39 @@
     yum: name=docker-1.10.3 state=installed
   - name: Edit the /etc/sysconfig/docker file
     shell: echo "OPTIONS='--selinux-enabled --insecure-registry 172.30.0.0/16 --log-opt max-size=1M --log-opt max-file=3'" >> /etc/sysconfig/docker
+
+- hosts: init_masters
+  remote_user: root
+  tasks:
   - name: unmount docker 4
     mount: 
-      name: /docker
-      src: /dev/sda2
+      name: /home
+      fstype: ext4
+      state: unmounted
+  - name: create docker volume group 1
+    lvg: vg=docker-vg pvs=/dev/sda3 force=yes
+
+- hosts: init_nodes
+  remote_user: root
+  tasks:
+  - name: unmount docker 4
+    mount: 
+      name: /home
       fstype: ext4
       state: unmounted
   - name: create docker volume group 1
     lvg: vg=docker-vg pvs=/dev/sda2 force=yes
+
+- hosts: nodes
+  remote_user: root
+  tasks:
   - name: use existing specified volume group B
     lineinfile: dest=/etc/sysconfig/docker-storage-setup regexp=^VG= line=VG=docker-vg 
   - name: enable Docker
     service: name=docker state=started enabled=yes
   - name: Run docker-storage-setup
     shell: docker-storage-setup
+ 
   - name: Install NetworkManager
     yum: name=NetworkManager state=latest
   - name: Start Network manager
@@ -43,4 +62,5 @@
       - iptables-services 
       - bridge-utils 
       - bash-completion
-      - atomic-openshift-utils
+      - nano
+
